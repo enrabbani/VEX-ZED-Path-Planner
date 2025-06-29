@@ -49,7 +49,7 @@ A **visual path planning tool** designed for VEX V5 teams to easily create, edit
 
 ## Download & Customize
 
-The full source code is available on GitHub. Feel free to download, modify, and make it your own:
+The full source code is available. Feel free to download, modify, and make it your own:
 
 [https://github.com/Ashton254/VEX-V5-Push-Back-Path-Planer](https://github.com/Ashton254/VEX-V5-Push-Back-Path-Planer)
 
