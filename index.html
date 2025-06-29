@@ -3,57 +3,92 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>VEX V5 Path Planner (Save + Load + Image Background)</title>
+        <title>VEX V5 Path Planner - ZED</title>
         <style>
+            /* Base and reset */
             body {
-                font-family: Arial, sans-serif;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #0a1a2a;
+                color: #e0e6f1;
                 margin: 0;
-                background: #222;
-                color: #eee;
+                padding: 1rem;
+                line-height: 1.6;
+                max-width: 900px;
+                margin-left: auto;
+                margin-right: auto;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
             }
             h1 {
-                margin: 15px 0 5px 0;
-            }
-            #field {
-                background: #555;
-                border: 3px solid #ccc;
-                margin-bottom: 10px;
-                touch-action: none;
-                cursor: crosshair;
-            }
-            button {
-                padding: 8px 12px;
-                margin: 2px;
-                background: #0078d7;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-            button:hover {
-                background: #005ea2;
+                color: #1e40af;
+                margin: 1.5rem 0 0.3rem 0;
+                font-size: 2.5rem;
+                border-bottom: 3px solid #1e40af;
+                padding-bottom: 0.3rem;
+                width: 100%;
+                text-align: center;
             }
             #instructions {
-                margin-bottom: 10px;
+                margin-bottom: 1rem;
                 max-width: 500px;
                 text-align: center;
                 line-height: 1.4;
             }
+            button {
+                padding: 8px 12px;
+                margin: 0 6px 6px 0;
+                background-color: #1e40af;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: background-color 0.3s ease;
+                user-select: none;
+            }
+            button:hover {
+                background-color: #3b82f6;
+            }
             input[type="number"] {
-                background: #444;
-                color: #eee;
-                border: 1px solid #666;
+                background: #142850;
+                color: #e0e6f1;
+                border: 1px solid #3b82f6;
                 border-radius: 4px;
                 padding: 4px 6px;
                 font-size: 14px;
+                width: 60px;
+                margin-left: 6px;
+            }
+            #field {
+                background: #142850;
+                border: 3px solid #3b82f6;
+                margin-bottom: 10px;
+                cursor: crosshair;
+                touch-action: none;
+                display: block;
+                max-width: 100%;
+                height: auto;
+            }
+            #controls {
+                margin-bottom: 1rem;
+                text-align: center;
+            }
+            #fieldToggle {
+                margin: 10px 0;
+            }
+            #fieldToggle label {
+                margin-right: 10px;
+                color: #e0e6f1;
+            }
+            #fieldToggle input {
+                margin-right: 5px;
             }
         </style>
     </head>
     <body>
-        <h1>VEX V5 Path Planner</h1>
+        <h1>VEX V5 Path Planner - ZED</h1>
+
         <div id="instructions">
             Left-click: Add or drag waypoints<br />
             Right-click a segment: toggle Bezier curve<br />
@@ -62,7 +97,7 @@
             <button id="playPauseBtn">Play</button>
         </div>
 
-        <div style="margin-bottom: 10px">
+        <div id="controls" style="margin-bottom: 10px; text-align: center">
             Robot Width (inches):
             <input
                 type="number"
@@ -71,9 +106,8 @@
                 max="50"
                 step="0.1"
                 value="18"
-                style="width: 60px"
             />
-            &nbsp;&nbsp; Robot Height (inches):
+               Robot Height (inches):
             <input
                 type="number"
                 id="robotHeightInput"
@@ -81,12 +115,19 @@
                 max="50"
                 step="0.1"
                 value="18"
-                style="width: 60px"
             />
         </div>
 
+        <div id="fieldToggle" style="text-align: center">
+            <label
+                ><input type="checkbox" id="fieldSwitch" />Toggle to Skills
+                Field</label
+            >
+        </div>
+
         <canvas id="field" width="654" height="656"></canvas>
-        <div>
+
+        <div id="controls" style="text-align: center">
             <button id="clearBtn">Clear Path</button>
             <button id="saveBtn">Save Path</button>
             <button id="loadBtn">Load Path</button>
@@ -127,8 +168,11 @@
             let robotPos = { x: 0, y: 0 };
             let robotAngle = 0; // radians
 
-            const fieldImage = new Image();
-            fieldImage.src = "https://i.imgur.com/RFG5QAp.png";
+            const headToHeadImage = new Image();
+            headToHeadImage.src = "https://i.imgur.com/tMTtGPB.png";
+            const skillsImage = new Image();
+            skillsImage.src = "https://i.imgur.com/hWxo7Ia.png";
+            let currentImage = headToHeadImage;
 
             function createDefaultControlPoints(p0, p1) {
                 const dx = p1.x - p0.x,
@@ -188,9 +232,9 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 // Draw background image (wait for load)
-                if (fieldImage.complete && fieldImage.naturalWidth !== 0) {
+                if (currentImage.complete && currentImage.naturalWidth !== 0) {
                     ctx.drawImage(
-                        fieldImage,
+                        currentImage,
                         0,
                         0,
                         canvas.width,
@@ -198,7 +242,7 @@
                     );
                 } else {
                     // fallback background color while image loads
-                    ctx.fillStyle = "#555";
+                    ctx.fillStyle = "#142850";
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
 
@@ -209,7 +253,7 @@
                         const p0 = waypoints[i],
                             p1 = waypoints[i + 1];
                         if (bezierSegments.has(i)) {
-                            ctx.strokeStyle = "#0f0";
+                            ctx.strokeStyle = "#3b82f6"; // lighter blue
                             const cps =
                                 controlPoints[i] ||
                                 createDefaultControlPoints(p0, p1);
@@ -227,7 +271,7 @@
                             ctx.stroke();
 
                             // Draw control handles
-                            ctx.strokeStyle = "#0ff";
+                            ctx.strokeStyle = "#60a5fa"; // softer blue
                             ctx.lineWidth = 1;
                             ctx.beginPath();
                             ctx.moveTo(p0.x, p0.y);
@@ -236,7 +280,7 @@
                             ctx.lineTo(cps[1].x, cps[1].y);
                             ctx.stroke();
 
-                            ctx.fillStyle = "#0ff";
+                            ctx.fillStyle = "#60a5fa";
                             cps.forEach((cp) => {
                                 ctx.beginPath();
                                 ctx.arc(cp.x, cp.y, cpRadius, 0, Math.PI * 2);
@@ -244,7 +288,7 @@
                             });
                             ctx.lineWidth = 3;
                         } else {
-                            ctx.strokeStyle = "#0a0";
+                            ctx.strokeStyle = "#1e40af"; // dark blue
                             ctx.beginPath();
                             ctx.moveTo(p0.x, p0.y);
                             ctx.lineTo(p1.x, p1.y);
@@ -255,12 +299,13 @@
 
                 // Draw waypoints
                 for (let i = 0; i < waypoints.length; i++) {
-                    ctx.fillStyle = "#0f0";
+                    ctx.fillStyle = "#3b82f6"; // lighter blue
                     ctx.beginPath();
                     ctx.arc(waypoints[i].x, waypoints[i].y, 8, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.fillStyle = "#000";
-                    ctx.font = "12px Arial";
+                    ctx.fillStyle = "#0a1a2a"; // background color for contrast
+                    ctx.font =
+                        "12px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
                     ctx.fillText(i + 1, waypoints[i].x, waypoints[i].y);
@@ -279,10 +324,10 @@
                 ctx.save();
                 ctx.translate(x, y);
                 ctx.rotate(angle);
-                ctx.fillStyle = "red";
+                ctx.fillStyle = "#ef4444"; // red-500
                 ctx.fillRect(-widthPx / 2, -heightPx / 2, widthPx, heightPx);
                 // Heading arrow
-                ctx.strokeStyle = "white";
+                ctx.strokeStyle = "#e0e6f1"; // light text color
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
@@ -375,7 +420,7 @@
             });
 
             function getMousePos(evt) {
-                const rect = canvas.getBoundingClientRect();
+                const rect = canvas.getBoundingClientRect(); // Fixed typo from getBoundingRect to getBoundingClientRect
                 return {
                     x: evt.clientX - rect.left,
                     y: evt.clientY - rect.top,
@@ -503,7 +548,7 @@
                 bezierSegments.clear();
                 controlPoints = {};
                 animationPlaying = false;
-                document.getElementById("playPauseBtn").textContent = "Play";
+                playPauseBtn.textContent = "Play";
                 draw();
             };
 
@@ -513,6 +558,8 @@
                     waypoints,
                     bezierSegments: Array.from(bezierSegments),
                     controlPoints,
+                    robotWidthInches,
+                    robotHeightInches,
                 };
                 const blob = new Blob([JSON.stringify(data, null, 2)], {
                     type: "application/json",
@@ -520,40 +567,58 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = "vex_path.json";
+                a.download = "pathplanner.json";
                 a.click();
                 URL.revokeObjectURL(url);
             };
 
             // Load button
+            const fileInput = document.getElementById("fileInput");
             document.getElementById("loadBtn").onclick = () => {
-                document.getElementById("fileInput").click();
+                fileInput.click();
             };
 
-            document
-                .getElementById("fileInput")
-                .addEventListener("change", (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        try {
-                            const data = JSON.parse(event.target.result);
-                            waypoints = data.waypoints || [];
-                            bezierSegments = new Set(data.bezierSegments || []);
-                            controlPoints = data.controlPoints || {};
-                            animationPlaying = false;
-                            document.getElementById(
-                                "playPauseBtn",
-                            ).textContent = "Play";
-                            draw();
-                        } catch (err) {
-                            alert("Invalid JSON file.");
+            fileInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        waypoints = data.waypoints || [];
+                        bezierSegments = new Set(data.bezierSegments || []);
+                        controlPoints = data.controlPoints || {};
+                        if (data.robotWidthInches) {
+                            robotWidthInches = data.robotWidthInches;
+                            robotWidthInput.value = robotWidthInches;
                         }
-                    };
-                    reader.readAsText(file);
-                });
+                        if (data.robotHeightInches) {
+                            robotHeightInches = data.robotHeightInches;
+                            robotHeightInput.value = robotHeightInches;
+                        }
+                        animationPlaying = false;
+                        playPauseBtn.textContent = "Play";
+                        draw();
+                    } catch (err) {
+                        alert("Failed to load path: Invalid file.");
+                    }
+                };
+                reader.readAsText(file);
+                fileInput.value = "";
+            });
 
+            // Field toggle switch
+            const fieldSwitch = document.getElementById("fieldSwitch");
+            fieldSwitch.addEventListener("change", () => {
+                currentImage = fieldSwitch.checked
+                    ? skillsImage
+                    : headToHeadImage;
+                draw();
+            });
+
+            // Initial draw
+            headToHeadImage.onload = draw;
+            skillsImage.onload = draw;
             draw();
         </script>
     </body>
