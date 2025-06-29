@@ -55,5 +55,3 @@ I’m creating a detailed step-by-step tutorial soon on my YouTube channel. Subs
 *(Add your license info here if you want)*
 
 ---
-
-Let me know if you want me to insert your actual website URL or anything else!
