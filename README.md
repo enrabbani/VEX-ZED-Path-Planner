@@ -25,7 +25,7 @@ A **visual path planning tool** designed for VEX V5 teams to easily create, edit
 ---
 # Use it here
 
-[[https://VEX-V5-Push-Back-Path-Planer](https://ashton254.github.io/VEX-ZED-Path-Planner/)]([https://github.com/Ashton254/VEX-V5-Push-Back-Path-Planer](https://ashton254.github.io/VEX-ZED-Path-Planner/))
+(https://ashton254.github.io/VEX-ZED-Path-Planner/)]([https://github.com/Ashton254/VEX-V5-Push-Back-Path-Planer](https://ashton254.github.io/VEX-ZED-Path-Planner/))
 ---
 
 ## Table of Contents
