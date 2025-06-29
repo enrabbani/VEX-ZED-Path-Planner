@@ -7,6 +7,10 @@
   <img src="https://img.shields.io/github/forks/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge" />
   <img src="https://img.shields.io/github/license/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge" />
   <img src="https://img.shields.io/badge/version-v1.0.0-blue?style=for-the-badge" />
+
+  <img src="https://img.shields.io/badge/Editor-VS%20Code-blue?style=for-the-badge&logo=visualstudiocode" alt="VS Code" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
+  <img src="https://img.shields.io/badge/Made%20by-Ash-blueviolet?style=for-the-badge" alt="Made by Ash" />
 </p>
 
 ---
