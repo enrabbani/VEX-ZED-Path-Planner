@@ -1,5 +1,5 @@
 <!-- Banner Image -->
-<img src="docs/assets/banner.png" alt="VEX V5 Path Planner — ZED" />
+<img src="docs/assets/zed-logo.png" alt="VEX V5 Path Planner — ZED" />
 
 <p align="center">
   <img src="https://img.shields.io/github/contributors/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge" alt="Contributors" />
