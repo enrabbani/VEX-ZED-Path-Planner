@@ -114,7 +114,18 @@ Want to give feedback, ask questions, or help out?
 Reach out via GitHub Issues  
 Drop comments on my [YouTube channel](https://www.youtube.com/channel/UC1oWpzjO2l_e_y2D8k62XoA)
 
-Discord server coming soon...
+---
+
+## Discord Server
+
+Join our VEX & ZED Discord to get help, chat, and share:
+
+<p align="center">
+  <a href="https://discord.gg/gQxwtWSMk5" target="_blank">
+    <img src="https://img.shields.io/discord/1362603405725536407?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
+  </a>
+</p>
+
 
 ---
 
