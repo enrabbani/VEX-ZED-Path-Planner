@@ -50,8 +50,5 @@ I’m creating a detailed step-by-step tutorial soon on my YouTube channel. Subs
 
 ---
 
-## License
 
-*(Add your license info here if you want)*
-
----
+--
