@@ -34,12 +34,12 @@ A **visual path planning tool** designed for VEX V5 teams to easily create, edit
 
 ## Features
 
-- 🟢 **Add and drag waypoints** — left-click to add, drag to move  
-- 🌀 **Toggle curves** — right-click to switch between straight and Bezier  
-- 🛠️ **Edit curves** — drag control handles to fine-tune paths  
-- 🤖 **Robot preview** — set robot size and simulate movement  
-- ▶️ **Play animation** — real-time robot path animation  
-- 💾 **Save/Load JSON** — export and import your custom paths
+- **Add and drag waypoints** — left-click to add, drag to move  
+- **Toggle curves** — right-click to switch between straight and Bezier  
+- **Edit curves** — drag control handles to fine-tune paths  
+- **Robot preview** — set robot size and simulate movement  
+- **Play animation** — real-time robot path animation  
+- **Save/Load JSON** — export and import your custom paths
 
 ---
 
@@ -54,7 +54,7 @@ A **visual path planning tool** designed for VEX V5 teams to easily create, edit
 
 ---
 
-## 🔥 Live Demo
+##  Live Demo
 
 <p align="center">
   <img src="docs/assets/ZED-DEMO.gif" alt="ZED Path Planner Demo" width="700" />
@@ -80,24 +80,24 @@ The full source code is available. Feel free to download, modify, and make it yo
 
 ## More Info & Website
 
-🌐 Use it online:  
+ Use it online:  
 [https://sites.google.com/view/vex-v5-path-planner/home?authuser=1](https://sites.google.com/view/vex-v5-path-planner/home?authuser=1)
 
 ---
 
 ## Tutorial Video
 
-🎥 I’m creating a full walkthrough soon on my YouTube channel. Subscribe to stay updated:  
+I’m creating a full walkthrough soon on my YouTube channel. Subscribe to stay updated:  
 [https://www.youtube.com/channel/UC1oWpzjO2l_e_y2D8k62XoA](https://www.youtube.com/channel/UC1oWpzjO2l_e_y2D8k62XoA)
 
 ---
 
 ## Built With
 
-- ⚙️ Vanilla JavaScript (no framework)
-- 🧱 HTML5 + CSS3
-- 🧠 Designed to be 100% frontend — no install or dependencies
-- 📁 Just open `ZED-Path-planer.html` in your browser
+- Vanilla JavaScript (no framework)
+- HTML5 + CSS3
+- Designed to be 100% frontend — no install or dependencies
+- Just open `ZED-Path-planer.html` in your browser
 
 ---
 
@@ -107,12 +107,12 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ---
 
-## 🧑‍💻 Community
+## Community
 
 Want to give feedback, ask questions, or help out?
 
-💬 Reach out via GitHub Issues  
-🎥 Drop comments on my [YouTube channel](https://www.youtube.com/channel/UC1oWpzjO2l_e_y2D8k62XoA)
+Reach out via GitHub Issues  
+Drop comments on my [YouTube channel](https://www.youtube.com/channel/UC1oWpzjO2l_e_y2D8k62XoA)
 
 Discord server coming soon...
 
