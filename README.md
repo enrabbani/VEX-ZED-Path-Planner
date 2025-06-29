@@ -2,11 +2,12 @@
 <img src="docs/assets/zed-logo.png" alt="VEX V5 Path Planner — ZED" />
 
 <p align="center">
-  <img src="https://img.shields.io/github/contributors/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge" />
-  <img src="https://img.shields.io/github/stars/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge" />
-  <img src="https://img.shields.io/github/forks/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/version-v1.0.0-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/github/contributors/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge&color=4c1" alt="Contributors" />
+  <img src="https://img.shields.io/github/stars/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge&color=blue" alt="Stars" />
+  <img src="https://img.shields.io/github/forks/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge&color=orange" alt="Forks" />
+  <img src="https://img.shields.io/badge/version-v1.0.0-purple?style=for-the-badge" alt="Version" />
 </p>
+
 
 ---
 
