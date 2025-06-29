@@ -88,7 +88,7 @@ The full source code is available. Feel free to download, modify, and make it yo
 ## More Info & Website
 
  Use it online:  
-[[https://sites.google.com/view/vex-v5-path-planner/home?authuser=1](https://sites.google.com/view/vex-v5-path-planner/home?authuser=1)](https://ashton254.github.io/VEX-ZED-Path-Planner/)
+[[https://sites.google.com/view/vex-v5-path-planner/home?authuser=1](https://sites.google.com/view/vex-v5-path-planner/home?authuser=1)]
 
 ---
 
