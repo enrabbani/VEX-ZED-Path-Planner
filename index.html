@@ -84,6 +84,12 @@
             #fieldToggle input {
                 margin-right: 5px;
             }
+            #timerDisplay {
+                margin: 10px 0;
+                font-size: 16px;
+                color: #e0e6f1;
+                text-align: center;
+            }
         </style>
     </head>
     <body>
@@ -127,6 +133,8 @@
 
         <canvas id="field" width="654" height="656"></canvas>
 
+        <div id="timerDisplay">Time: 0.00s</div>
+
         <div id="controls" style="text-align: center">
             <button id="clearBtn">Clear Path</button>
             <button id="saveBtn">Save Path</button>
@@ -167,6 +175,11 @@
             // Robot position for animation
             let robotPos = { x: 0, y: 0 };
             let robotAngle = 0; // radians
+
+            // Timer variables
+            let startTime = 0;
+            let timerInterval = null;
+            const timerDisplay = document.getElementById("timerDisplay");
 
             const headToHeadImage = new Image();
             headToHeadImage.src = "https://i.imgur.com/tMTtGPB.png";
@@ -336,9 +349,29 @@
                 ctx.restore();
             }
 
+            // Start the timer
+            function startTimer() {
+                startTime = performance.now();
+                timerInterval = setInterval(() => {
+                    const elapsed = (performance.now() - startTime) / 1000;
+                    timerDisplay.textContent = `Time: ${elapsed.toFixed(2)}s`;
+                }, 100);
+            }
+
+            // Stop the timer
+            function stopTimer() {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+            }
+
             // Move the robot along the path
             function animateRobot() {
-                if (!animationPlaying || waypoints.length < 2) return;
+                if (!animationPlaying || waypoints.length < 2) {
+                    stopTimer();
+                    return;
+                }
 
                 // Get current segment points
                 const p0 = waypoints[animSegment];
@@ -368,7 +401,11 @@
                     animT = 0;
                     animSegment++;
                     if (animSegment >= waypoints.length - 1) {
-                        animSegment = 0; // loop to start
+                        animationPlaying = false;
+                        playPauseBtn.textContent = "Play";
+                        stopTimer();
+                        draw();
+                        return;
                     }
                 }
 
@@ -382,6 +419,7 @@
                 if (animationPlaying) {
                     animationPlaying = false;
                     playPauseBtn.textContent = "Play";
+                    stopTimer();
                     draw(); // redraw without robot
                 } else {
                     if (waypoints.length < 2) {
@@ -394,6 +432,7 @@
                     playPauseBtn.textContent = "Pause";
                     animSegment = 0;
                     animT = 0;
+                    startTimer();
                     animateRobot();
                 }
             };
@@ -420,7 +459,7 @@
             });
 
             function getMousePos(evt) {
-                const rect = canvas.getBoundingClientRect(); // Fixed typo from getBoundingRect to getBoundingClientRect
+                const rect = canvas.getBoundingClientRect();
                 return {
                     x: evt.clientX - rect.left,
                     y: evt.clientY - rect.top,
@@ -549,6 +588,8 @@
                 controlPoints = {};
                 animationPlaying = false;
                 playPauseBtn.textContent = "Play";
+                stopTimer();
+                timerDisplay.textContent = "Time: 0.00s";
                 draw();
             };
 
@@ -598,6 +639,8 @@
                         }
                         animationPlaying = false;
                         playPauseBtn.textContent = "Play";
+                        stopTimer();
+                        timerDisplay.textContent = "Time: 0.00s";
                         draw();
                     } catch (err) {
                         alert("Failed to load path: Invalid file.");
