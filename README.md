@@ -45,6 +45,7 @@ A **visual path planning tool** designed for VEX V5 teams to easily create, edit
 <p align="center">
   <img src="docs/assets/ZED-path-planner-1.png" alt="Screenshot 1" width="600" />
 </p>
+
 ---
 
 ## Download & Customize
