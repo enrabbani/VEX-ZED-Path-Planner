@@ -11,7 +11,6 @@ A visual path planning tool designed for VEX V5 teams to easily create, edit, an
 - **Edit curve shapes:** Drag control points to fine-tune curves.  
 - **Robot visualization:** Set robot size and watch its position and heading move along the path.  
 - **Play animation:** Simulate your robot following the path in real time.  
-- **Undo/Redo:** Easily undo or redo changes.  
 - **Save and Load:** Export your paths as JSON files and load them anytime.
 
 ---
