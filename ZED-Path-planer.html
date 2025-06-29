@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>VEX V5 Path Planner (Save + Load + Image Background)</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                background: #222;
+                color: #eee;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            h1 {
+                margin: 15px 0 5px 0;
+            }
+            #field {
+                background: #555;
+                border: 3px solid #ccc;
+                margin-bottom: 10px;
+                touch-action: none;
+                cursor: crosshair;
+            }
+            button {
+                padding: 8px 12px;
+                margin: 2px;
+                background: #0078d7;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            button:hover {
+                background: #005ea2;
+            }
+            #instructions {
+                margin-bottom: 10px;
+                max-width: 500px;
+                text-align: center;
+                line-height: 1.4;
+            }
+            input[type="number"] {
+                background: #444;
+                color: #eee;
+                border: 1px solid #666;
+                border-radius: 4px;
+                padding: 4px 6px;
+                font-size: 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>VEX V5 Path Planner</h1>
+        <div id="instructions">
+            Left-click: Add or drag waypoints<br />
+            Right-click a segment: toggle Bezier curve<br />
+            Drag dots: edit curve shape<br />
+            Save or load your path anytime<br />
+            <button id="playPauseBtn">Play</button>
+        </div>
+
+        <div style="margin-bottom: 10px">
+            Robot Width (inches):
+            <input
+                type="number"
+                id="robotWidthInput"
+                min="1"
+                max="50"
+                step="0.1"
+                value="18"
+                style="width: 60px"
+            />
+            &nbsp;&nbsp; Robot Height (inches):
+            <input
+                type="number"
+                id="robotHeightInput"
+                min="1"
+                max="50"
+                step="0.1"
+                value="18"
+                style="width: 60px"
+            />
+        </div>
+
+        <canvas id="field" width="654" height="656"></canvas>
+        <div>
+            <button id="clearBtn">Clear Path</button>
+            <button id="saveBtn">Save Path</button>
+            <button id="loadBtn">Load Path</button>
+            <input
+                type="file"
+                id="fileInput"
+                style="display: none"
+                accept=".json"
+            />
+        </div>
+
+        <script>
+            const canvas = document.getElementById("field");
+            const ctx = canvas.getContext("2d");
+            const gridSize = 1;
+            const cpRadius = 8;
+            const hitRadius = 10;
+
+            let waypoints = [];
+            let bezierSegments = new Set();
+            let controlPoints = {};
+            let draggingIndex = -1;
+            let draggingCP = null;
+            let offsetX, offsetY;
+
+            // Robot size (in inches)
+            const PIXELS_PER_INCH = 50 / 18; // ~2.78 pixels per inch
+            let robotWidthInches = 18;
+            let robotHeightInches = 18;
+
+            // Animation state
+            let animationPlaying = false;
+            let animSegment = 0; // which segment currently animating
+            let animT = 0; // progress along segment 0 to 1
+            const animSpeed = 0.005; // speed per frame, tweak this for faster/slower
+
+            // Robot position for animation
+            let robotPos = { x: 0, y: 0 };
+            let robotAngle = 0; // radians
+
+            const fieldImage = new Image();
+            fieldImage.src = "https://i.imgur.com/RFG5QAp.png";
+
+            function createDefaultControlPoints(p0, p1) {
+                const dx = p1.x - p0.x,
+                    dy = p1.y - p0.y,
+                    len = Math.sqrt(dx * dx + dy * dy);
+                if (len === 0) return [{ ...p0 }, { ...p1 }];
+                const nx = -dy / len,
+                    ny = dx / len;
+                return [
+                    {
+                        x: p0.x + dx * 0.3 + nx * 30,
+                        y: p0.y + dy * 0.3 + ny * 30,
+                    },
+                    {
+                        x: p0.x + dx * 0.7 + nx * 30,
+                        y: p0.y + dy * 0.7 + ny * 30,
+                    },
+                ];
+            }
+
+            // Evaluate point on cubic Bezier curve at t (0 to 1)
+            function cubicBezierPoint(p0, c0, c1, p1, t) {
+                const u = 1 - t;
+                const tt = t * t;
+                const uu = u * u;
+                const uuu = uu * u;
+                const ttt = tt * t;
+
+                let x = uuu * p0.x;
+                x += 3 * uu * t * c0.x;
+                x += 3 * u * tt * c1.x;
+                x += ttt * p1.x;
+
+                let y = uuu * p0.y;
+                y += 3 * uu * t * c0.y;
+                y += 3 * u * tt * c1.y;
+                y += ttt * p1.y;
+
+                return { x, y };
+            }
+
+            // Evaluate derivative (tangent) on cubic Bezier at t for angle
+            function cubicBezierTangent(p0, c0, c1, p1, t) {
+                const u = 1 - t;
+                let x =
+                    3 * u * u * (c0.x - p0.x) +
+                    6 * u * t * (c1.x - c0.x) +
+                    3 * t * t * (p1.x - c1.x);
+                let y =
+                    3 * u * u * (c0.y - p0.y) +
+                    6 * u * t * (c1.y - c0.y) +
+                    3 * t * t * (p1.y - c1.y);
+                return { x, y };
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw background image (wait for load)
+                if (fieldImage.complete && fieldImage.naturalWidth !== 0) {
+                    ctx.drawImage(
+                        fieldImage,
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height,
+                    );
+                } else {
+                    // fallback background color while image loads
+                    ctx.fillStyle = "#555";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+
+                // Draw paths and curves
+                if (waypoints.length > 1) {
+                    ctx.lineWidth = 3;
+                    for (let i = 0; i < waypoints.length - 1; i++) {
+                        const p0 = waypoints[i],
+                            p1 = waypoints[i + 1];
+                        if (bezierSegments.has(i)) {
+                            ctx.strokeStyle = "#0f0";
+                            const cps =
+                                controlPoints[i] ||
+                                createDefaultControlPoints(p0, p1);
+                            controlPoints[i] = cps;
+                            ctx.beginPath();
+                            ctx.moveTo(p0.x, p0.y);
+                            ctx.bezierCurveTo(
+                                cps[0].x,
+                                cps[0].y,
+                                cps[1].x,
+                                cps[1].y,
+                                p1.x,
+                                p1.y,
+                            );
+                            ctx.stroke();
+
+                            // Draw control handles
+                            ctx.strokeStyle = "#0ff";
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(p0.x, p0.y);
+                            ctx.lineTo(cps[0].x, cps[0].y);
+                            ctx.moveTo(p1.x, p1.y);
+                            ctx.lineTo(cps[1].x, cps[1].y);
+                            ctx.stroke();
+
+                            ctx.fillStyle = "#0ff";
+                            cps.forEach((cp) => {
+                                ctx.beginPath();
+                                ctx.arc(cp.x, cp.y, cpRadius, 0, Math.PI * 2);
+                                ctx.fill();
+                            });
+                            ctx.lineWidth = 3;
+                        } else {
+                            ctx.strokeStyle = "#0a0";
+                            ctx.beginPath();
+                            ctx.moveTo(p0.x, p0.y);
+                            ctx.lineTo(p1.x, p1.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // Draw waypoints
+                for (let i = 0; i < waypoints.length; i++) {
+                    ctx.fillStyle = "#0f0";
+                    ctx.beginPath();
+                    ctx.arc(waypoints[i].x, waypoints[i].y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = "#000";
+                    ctx.font = "12px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(i + 1, waypoints[i].x, waypoints[i].y);
+                }
+
+                // Draw the robot if animating
+                if (animationPlaying && waypoints.length > 0) {
+                    drawRobot(robotPos.x, robotPos.y, robotAngle);
+                }
+            }
+
+            // Draw robot as a rectangle with heading arrow, size in inches converted to pixels
+            function drawRobot(x, y, angle) {
+                const widthPx = robotWidthInches * PIXELS_PER_INCH;
+                const heightPx = robotHeightInches * PIXELS_PER_INCH;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.fillStyle = "red";
+                ctx.fillRect(-widthPx / 2, -heightPx / 2, widthPx, heightPx);
+                // Heading arrow
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(widthPx * 0.75, 0);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Move the robot along the path
+            function animateRobot() {
+                if (!animationPlaying || waypoints.length < 2) return;
+
+                // Get current segment points
+                const p0 = waypoints[animSegment];
+                const p1 = waypoints[animSegment + 1];
+
+                let pos, tangent;
+
+                if (bezierSegments.has(animSegment)) {
+                    const cps =
+                        controlPoints[animSegment] ||
+                        createDefaultControlPoints(p0, p1);
+                    pos = cubicBezierPoint(p0, cps[0], cps[1], p1, animT);
+                    tangent = cubicBezierTangent(p0, cps[0], cps[1], p1, animT);
+                } else {
+                    // Linear interpolation
+                    const x = p0.x + (p1.x - p0.x) * animT;
+                    const y = p0.y + (p1.y - p0.y) * animT;
+                    pos = { x, y };
+                    tangent = { x: p1.x - p0.x, y: p1.y - p0.y };
+                }
+
+                robotPos = pos;
+                robotAngle = Math.atan2(tangent.y, tangent.x);
+
+                animT += animSpeed;
+                if (animT > 1) {
+                    animT = 0;
+                    animSegment++;
+                    if (animSegment >= waypoints.length - 1) {
+                        animSegment = 0; // loop to start
+                    }
+                }
+
+                draw();
+                requestAnimationFrame(animateRobot);
+            }
+
+            // Play/Pause button toggle
+            const playPauseBtn = document.getElementById("playPauseBtn");
+            playPauseBtn.onclick = () => {
+                if (animationPlaying) {
+                    animationPlaying = false;
+                    playPauseBtn.textContent = "Play";
+                    draw(); // redraw without robot
+                } else {
+                    if (waypoints.length < 2) {
+                        alert(
+                            "Add at least 2 waypoints to play the animation.",
+                        );
+                        return;
+                    }
+                    animationPlaying = true;
+                    playPauseBtn.textContent = "Pause";
+                    animSegment = 0;
+                    animT = 0;
+                    animateRobot();
+                }
+            };
+
+            // Robot size inputs
+            const robotWidthInput = document.getElementById("robotWidthInput");
+            const robotHeightInput =
+                document.getElementById("robotHeightInput");
+
+            robotWidthInput.addEventListener("input", () => {
+                const val = parseFloat(robotWidthInput.value);
+                if (!isNaN(val) && val >= 1 && val <= 50) {
+                    robotWidthInches = val;
+                    draw();
+                }
+            });
+
+            robotHeightInput.addEventListener("input", () => {
+                const val = parseFloat(robotHeightInput.value);
+                if (!isNaN(val) && val >= 1 && val <= 50) {
+                    robotHeightInches = val;
+                    draw();
+                }
+            });
+
+            function getMousePos(evt) {
+                const rect = canvas.getBoundingClientRect();
+                return {
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top,
+                };
+            }
+
+            function findWaypoint(x, y) {
+                return waypoints.findIndex(
+                    (p) => Math.hypot(p.x - x, p.y - y) < 10,
+                );
+            }
+
+            function findControlPoint(x, y) {
+                for (const [i, cps] of Object.entries(controlPoints)) {
+                    for (let j = 0; j < 2; j++) {
+                        if (
+                            Math.hypot(cps[j].x - x, cps[j].y - y) <
+                            cpRadius + 4
+                        ) {
+                            return { segmentIndex: +i, cpIndex: j };
+                        }
+                    }
+                }
+                return null;
+            }
+
+            function pointNearSegment(p, a, b, threshold) {
+                const ABx = b.x - a.x,
+                    ABy = b.y - a.y;
+                const APx = p.x - a.x,
+                    APy = p.y - a.y;
+                const ab2 = ABx * ABx + ABy * ABy;
+                let t = (APx * ABx + APy * ABy) / ab2;
+                t = Math.max(0, Math.min(1, t));
+                const closest = { x: a.x + ABx * t, y: a.y + ABy * t };
+                return (
+                    Math.hypot(p.x - closest.x, p.y - closest.y) <= threshold
+                );
+            }
+
+            canvas.addEventListener("mousedown", (evt) => {
+                const pos = getMousePos(evt);
+                if (evt.button === 0) {
+                    const cp = findControlPoint(pos.x, pos.y);
+                    if (cp) {
+                        draggingCP = cp;
+                        offsetX =
+                            pos.x -
+                            controlPoints[cp.segmentIndex][cp.cpIndex].x;
+                        offsetY =
+                            pos.y -
+                            controlPoints[cp.segmentIndex][cp.cpIndex].y;
+                        return;
+                    }
+                    const idx = findWaypoint(pos.x, pos.y);
+                    if (idx >= 0) {
+                        draggingIndex = idx;
+                        offsetX = pos.x - waypoints[idx].x;
+                        offsetY = pos.y - waypoints[idx].y;
+                    } else {
+                        waypoints.push({
+                            x: Math.round(pos.x / gridSize) * gridSize,
+                            y: Math.round(pos.y / gridSize) * gridSize,
+                        });
+                    }
+                    draw();
+                }
+            });
+
+            canvas.addEventListener("mousemove", (evt) => {
+                const pos = getMousePos(evt);
+                if (draggingCP) {
+                    const cp =
+                        controlPoints[draggingCP.segmentIndex][
+                            draggingCP.cpIndex
+                        ];
+                    cp.x = pos.x - offsetX;
+                    cp.y = pos.y - offsetY;
+                    draw();
+                } else if (draggingIndex >= 0) {
+                    waypoints[draggingIndex].x =
+                        Math.round((pos.x - offsetX) / gridSize) * gridSize;
+                    waypoints[draggingIndex].y =
+                        Math.round((pos.y - offsetY) / gridSize) * gridSize;
+                    draw();
+                }
+            });
+
+            canvas.addEventListener("mouseup", () => {
+                draggingIndex = -1;
+                draggingCP = null;
+            });
+
+            canvas.addEventListener("contextmenu", (evt) => {
+                evt.preventDefault();
+                const pos = getMousePos(evt);
+                for (let i = 0; i < waypoints.length - 1; i++) {
+                    if (
+                        pointNearSegment(
+                            pos,
+                            waypoints[i],
+                            waypoints[i + 1],
+                            hitRadius,
+                        )
+                    ) {
+                        if (bezierSegments.has(i)) {
+                            bezierSegments.delete(i);
+                            delete controlPoints[i];
+                        } else {
+                            bezierSegments.add(i);
+                            controlPoints[i] = createDefaultControlPoints(
+                                waypoints[i],
+                                waypoints[i + 1],
+                            );
+                        }
+                        draw();
+                        return;
+                    }
+                }
+            });
+
+            // Clear button
+            document.getElementById("clearBtn").onclick = () => {
+                waypoints = [];
+                bezierSegments.clear();
+                controlPoints = {};
+                animationPlaying = false;
+                document.getElementById("playPauseBtn").textContent = "Play";
+                draw();
+            };
+
+            // Save button
+            document.getElementById("saveBtn").onclick = () => {
+                const data = {
+                    waypoints,
+                    bezierSegments: Array.from(bezierSegments),
+                    controlPoints,
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], {
+                    type: "application/json",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "vex_path.json";
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            // Load button
+            document.getElementById("loadBtn").onclick = () => {
+                document.getElementById("fileInput").click();
+            };
+
+            document
+                .getElementById("fileInput")
+                .addEventListener("change", (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        try {
+                            const data = JSON.parse(event.target.result);
+                            waypoints = data.waypoints || [];
+                            bezierSegments = new Set(data.bezierSegments || []);
+                            controlPoints = data.controlPoints || {};
+                            animationPlaying = false;
+                            document.getElementById(
+                                "playPauseBtn",
+                            ).textContent = "Play";
+                            draw();
+                        } catch (err) {
+                            alert("Invalid JSON file.");
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+
+            draw();
+        </script>
+    </body>
+</html>
