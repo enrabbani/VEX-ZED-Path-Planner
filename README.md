@@ -1,6 +1,19 @@
+<!-- Banner Image -->
+<img src="docs/assets/banner.png" alt="VEX V5 Path Planner — ZED" />
+
+<p align="center">
+  <img src="https://img.shields.io/github/contributors/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge" alt="Contributors" />
+  <img src="https://img.shields.io/github/stars/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge" alt="Stars" />
+  <img src="https://img.shields.io/github/forks/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge" alt="Forks" />
+  <img src="https://img.shields.io/github/license/Ashton254/VEX-V5-Push-Back-Path-Planer?style=for-the-badge" alt="License" />
+  <img src="https://img.shields.io/badge/version-v1.0.0-blue?style=for-the-badge" alt="Version" />
+</p>
+
+---
+
 # VEX V5 Path Planner — ZED
 
-A visual path planning tool designed for VEX V5 teams to easily create, edit, and visualize autonomous robot paths — no coding required.
+A **visual path planning tool** designed for VEX V5 teams to easily create, edit, and visualize autonomous robot paths — no coding required.
 
 ---
 
@@ -26,11 +39,22 @@ A visual path planning tool designed for VEX V5 teams to easily create, edit, an
 
 ---
 
+## Screenshots
+
+<!-- Add your screenshots here -->
+<p align="center">
+  <img src="docs/assets/screenshot1.png" alt="Path Planner Screenshot 1" width="600" />
+  <br><br>
+  <img src="docs/assets/screenshot2.png" alt="Path Planner Screenshot 2" width="600" />
+</p>
+
+---
+
 ## Download & Customize
 
 The full source code is available on GitHub. Feel free to download, modify, and make it your own:
 
-[https://github.com/Ashton254/VEX-V5-Push-Back-Path-Planer.git](https://github.com/Ashton254/VEX-V5-Push-Back-Path-Planer.git)
+[https://github.com/Ashton254/VEX-V5-Push-Back-Path-Planer](https://github.com/Ashton254/VEX-V5-Push-Back-Path-Planer)
 
 ---
 
@@ -49,3 +73,7 @@ I’m creating a detailed step-by-step tutorial soon on my YouTube channel. Subs
 [https://www.youtube.com/channel/UC1oWpzjO2l_e_y2D8k62XoA](https://www.youtube.com/channel/UC1oWpzjO2l_e_y2D8k62XoA)
 
 ---
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
