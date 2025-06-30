@@ -170,7 +170,9 @@
             let animationPlaying = false;
             let animSegment = 0; // which segment currently animating
             let animT = 0; // progress along segment 0 to 1
-            const animSpeed = 0.005; // speed per frame, tweak this for faster/slower
+            const targetSpeed = 200; // pixels per second (increased for faster movement)
+            const frameRate = 60; // assumed frames per second
+            const animSpeed = targetSpeed / frameRate; // pixels per frame
 
             // Robot position for animation
             let robotPos = { x: 0, y: 0 };
@@ -239,6 +241,28 @@
                     6 * u * t * (c1.y - c0.y) +
                     3 * t * t * (p1.y - c1.y);
                 return { x, y };
+            }
+
+            // Approximate length of a segment (linear or Bezier)
+            function getSegmentLength(p0, p1, isBezier, cps) {
+                if (!isBezier) {
+                    const dx = p1.x - p0.x;
+                    const dy = p1.y - p0.y;
+                    return Math.sqrt(dx * dx + dy * dy);
+                }
+                // Approximate Bezier length by sampling points
+                const samples = 100;
+                let length = 0;
+                let prev = p0;
+                for (let i = 1; i <= samples; i++) {
+                    const t = i / samples;
+                    const curr = cubicBezierPoint(p0, cps[0], cps[1], p1, t);
+                    const dx = curr.x - prev.x;
+                    const dy = curr.y - prev.y;
+                    length += Math.sqrt(dx * dx + dy * dy);
+                    prev = curr;
+                }
+                return length;
             }
 
             function draw() {
@@ -379,10 +403,17 @@
 
                 let pos, tangent;
 
-                if (bezierSegments.has(animSegment)) {
-                    const cps =
-                        controlPoints[animSegment] ||
-                        createDefaultControlPoints(p0, p1);
+                // Calculate segment length
+                const isBezier = bezierSegments.has(animSegment);
+                const cps = isBezier
+                    ? controlPoints[animSegment] || createDefaultControlPoints(p0, p1)
+                    : null;
+                const segmentLength = getSegmentLength(p0, p1, isBezier, cps);
+
+                // Calculate t increment for constant speed (pixels per frame)
+                const tIncrement = segmentLength > 0 ? animSpeed / segmentLength : 0;
+
+                if (isBezier) {
                     pos = cubicBezierPoint(p0, cps[0], cps[1], p1, animT);
                     tangent = cubicBezierTangent(p0, cps[0], cps[1], p1, animT);
                 } else {
@@ -396,7 +427,7 @@
                 robotPos = pos;
                 robotAngle = Math.atan2(tangent.y, tangent.x);
 
-                animT += animSpeed;
+                animT += tIncrement;
                 if (animT > 1) {
                     animT = 0;
                     animSegment++;
